@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UBPLC - মেম্বার ডিরেক্টরি</title>
+    <style>
+        :root { --primary: #004a99; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: var(--primary); }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        
+        /* সদস্য তালিকার ডিজাইন */
+        #memberList { margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }
+        .member-card { background: #f9f9f9; padding: 10px; margin-bottom: 10px; border-left: 5px solid var(--primary); border-radius: 4px; }
+        .member-card h4 { margin: 0; color: #333; }
+        .member-card p { margin: 5px 0; font-size: 14px; color: #666; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>UBPLC প্রোফাইল অ্যাপ</h2>
+    
+    <form id="ubplcForm">
+        <input type="text" name="name" placeholder="আপনার নাম" required>
+        <input type="text" name="designation" placeholder="আপনার পদবী" required>
+        <input type="text" name="phone" placeholder="ফোন নম্বর" required>
+        <button type="submit" id="submitBtn">প্রোফাইল সেভ করুন</button>
+    </form>
+    <p id="status" style="text-align:center; color: green;"></p>
+
+    <div id="memberList">
+        <h3>সকল সদস্য তালিকা</h3>
+        <button onclick="loadMembers()" style="background: #6c757d; margin-bottom: 15px;">তালিকা রিফ্রেশ করুন</button>
+        <div id="listContent">লোড হচ্ছে...</div>
+    </div>
+</div>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwFWz8GSzGeA-tGwOcr8DHbIyU4AjsCMsG9_oypMhQ8/exec';
+    
+    // তথ্য সেভ করার ফাংশন
+    document.getElementById('ubplcForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        fetch(scriptURL, { method: 'POST', body: new FormData(e.target)})
+        .then(() => {
+            document.getElementById('status').innerText = "সফলভাবে সেভ হয়েছে!";
+            e.target.reset();
+            btn.disabled = false;
+            loadMembers(); // সেভ হওয়ার পর অটো লিস্ট আপডেট হবে
+        });
+    });
+
+    // শিট থেকে তথ্য এনে দেখানোর ফাংশন (৩০০ জনের জন্য)
+    function loadMembers() {
+        const listDiv = document.getElementById('listContent');
+        listDiv.innerHTML = "লোড হচ্ছে...";
+        
+        // আপনার শিট থেকে ডেটা পড়ার জন্য নিচের লিঙ্কটি ব্যবহার হবে (JSON ফরম্যাটে)
+        // এটি একটু অ্যাডভান্সড, তাই আপাতত আমরা সিম্পল রাখছি। 
+        // ৩০০ জন হলে আপনি সরাসরি Google Sheet এর CSV লিঙ্ক ব্যবহার করতে পারেন।
+        fetch(scriptURL + "?read=true") 
+        .then(res => res.json())
+        .then(data => {
+            listDiv.innerHTML = "";
+            data.forEach(member => {
+                listDiv.innerHTML += `
+                    <div class="member-card">
+                        <h4>${member.name}</h4>
+                        <p>পদবী: ${member.designation}</p>
+                        <p>ফোন: ${member.phone}</p>
+                    </div>`;
+            });
+        }).catch(() => {
+            listDiv.innerHTML = "আপাতত তালিকা দেখার জন্য শিটটি চেক করুন।";
+        });
+    }
+</script>
+
+</body>
+</html>
